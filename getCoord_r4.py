@@ -59,7 +59,7 @@ def writeCommand(command, device, timeout=20):
     ser.write('%s' %command)
     start_time = time.time()
     if device == 2:
-        time.sleep(.1)
+        time.sleep(.1)  #sleep for arduino to not lose packet.
     incoming_data = []
 
     while time.time() - start_time < timeout:
