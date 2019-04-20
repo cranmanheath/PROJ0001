@@ -49,48 +49,30 @@ def readoutSerial(device):
 	selectSerial(device).flushInput()
 
 
-def writeCommand(command, device):
+def writeCommand(command, device, timeout=20):
 	"""
 	This function writes a Marlin or Arduino command to the
 	serial port named device.  
 	"""	
 	ser = selectSerial(device)
-	ser.write('%s\n' %command)
-	time.sleep(.1)
-	ser.flushOutput()
-	time.sleep(.1)
+	ser.write('%s' %command)
+	start_time = time.time()
+	#time.sleep(.1)
+	#ser.flushOutput()
+	#time.sleep(.1)
 	incoming_data = []
 
-	while 1:
+	while time.time() - start_time < timeout:
 		while ser.inWaiting():
 			line = ser.readline()
 			#print(line)
 			incoming_data.append(line)
-
-			if (device == 1) and ('ok' in line):
-				print('ok received')
+			
+			if 'ok' in line:
+				print('Device', device, 'ok recieved')
 				return incoming_data
-			elif (device == 2):
-				pass
-#		line = selectSerial(device).readline()
-#		time.sleep(.1)
-#		print(line)
-
-#		if device == 1:
-#			if line == 'ok\n':
-#				print('Marlin ok received')
-#				break
-#			if not line:
-#				print('EOF Marlin reached')
-#				break
-#		if device == 2:
-#			if line == 'ok\r\n':
-#				print('arduino ok received')
-#				break
-#			if not line:
-#				print('EOF arduino reached')
-#				break				
-	return incoming_data
+	raise SystemError('Device timed out')			
+	return
 
 def selectSerial(devID):
 	switcher = {
@@ -132,8 +114,10 @@ while 1:
 	if a == "quit":
 		break
 	else:
-		incomming_data = writeCommand('%s\n' %a , 1)
-		print(incomming_data)
+		marlin_data = writeCommand('%s\n' %a , 1)
+		arduino_data = writeCommand('2', 2)
+		print('marlin_data:' + ''.join(marlin_data))
+		print('arduino_data:' + ''.join(arduino_data))
 ###################################
 #collect data
 ###################################
