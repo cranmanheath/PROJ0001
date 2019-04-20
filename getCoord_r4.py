@@ -57,9 +57,7 @@ def writeCommand(command, device, timeout=20):
 	ser = selectSerial(device)
 	ser.write('%s' %command)
 	start_time = time.time()
-	#time.sleep(.1)
-	#ser.flushOutput()
-	#time.sleep(.1)
+	time.sleep(.1)
 	incoming_data = []
 
 	while time.time() - start_time < timeout:
@@ -115,12 +113,12 @@ while 1:
 		break
 	else:
 		marlin_data = writeCommand('%s\n' %a , 1)
-		arduino_data = writeCommand('2', 2)
+		arduino_data = writeCommand(2, 2)
 		print('marlin_data:' + ''.join(marlin_data))
 		print('arduino_data:' + ''.join(arduino_data))
-###################################
-#collect data
-###################################
-marSer.close()
-ardSer.close()
-print('Ports Closed')
+####################################
+##collect data
+####################################
+#marSer.close()
+#ardSer.close()
+#print('Ports Closed')
