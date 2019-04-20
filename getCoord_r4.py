@@ -38,12 +38,7 @@ while 1:
 	else:
 		print("connected to %s" %ardSer.name)
 		break
-
-#marSer.flushInput()
-#marSer.flushOutput()
-#ardSer.flushInput()
-#ardSer.flushOutput()
-time.sleep(0.1)
+#time.sleep(0.1)
 
 ###################################
 #functions
@@ -56,12 +51,8 @@ def writeCommand(command, device):
 	selectSerial(device).write('%s\n' %command)
 	time.sleep(.1)
 	selectSerial(device).flushOutput()
-#	selectLogfile(device).write(selectSerial(device).readline())
 	time.sleep(.1)
-#	selectLogfile(device).flush()
-#	selectLogfile(device).seek(0)
 	while 1:
-#		line = selectLogfile(device).readline()
 		line = selectSerial(device).readline()
 		time.sleep(.1)
 		print(line)
@@ -97,28 +88,7 @@ def selectLogfile(devID):
 	return switcher.get(devID, "no device selected");
 
 def calibrate(fGcode):	
-	selectSerial(1).write(fGcode)
-#	time.sleep(.5)
-#	selectLogfile(device).write(selectSerial(device).readline())
-#	selectLogfile(device).flush()
-##	selectLogfile(device).seek(0)
-#	while 1:
-#		line = selectLogfile(device).readline()
-#		time.sleep(.1)
-#		if device == 1:
-#			if line == 'ok\n':
-#				print('Marlin ok received')
-#				break
-#			if not line:
-#				print('EOF Marlin reached')
-#				break
-#		if device == 2:
-#			if line == 'ok\r\n':
-#				print('arduino ok received')
-#				break
-#			if not line:
-#				print('EOF arduino reached')
-#				break				
+	selectSerial(1).write(fGcode)			
 	return;
 
 
@@ -139,65 +109,14 @@ def calibrate(fGcode):
 readoutSerial(1)
 
 while 1:
-	a = raw_input("give command or quit: ")
+	a = input("give command or quit: ")
 	if a == "quit":
 		break
 	else:
 		writeCommand('%s\n' %a , 1)
-
-#	writeCommand('G28 X0 Y0\n', 1)
-#	writeCommand('G91\n', 1)
-#elif(a == "no"):
-#	print("skipping home\n\r")
-
-#a = raw_input("talk to arduino? yes or no...:")	
-#if(a == "yes"):
-#	writeCommand(struct.pack('<B', 1),2)
-#if(a == "no"):
-#	print("skipping arduino")
-
 ###################################
 #collect data
 ###################################
-
-#a = raw_input("begin loop to collect data? yes or no or wait...:")
-#if(a == "yes"):
-	#calibrate('/home/user-1/Projects/PROJ0001/newPosition.txt')
-#	for i in range(10):
-#		fpos.write('G1 X10\n')
-#	fpos.close()
-#	fpos = open('/home/user-1/Projects/PROJ0001/newPosition.txt', 'r')
-#	time.sleep(1)
-#	marSer.write(fpos.read())
-#	time.sleep(1)
-#	t = 0
-#	while t != 5:
-#		print(fpos.read())
-#		t = t+1
-
-#	fpos.close()
-#	fCoord.close()
-#	fMar.close()
-#	fArd.close()
-#	print('message file closed')
 marSer.close()
 ardSer.close()
 print('Ports Closed')
-
-#elif (a == "no"):
-#	fpos.close()
-#	fCoord.close()
-#	fMar.close()
-#	fArd.close()
-#	print('message file closed')
-#	marSer.close()
-#	ardSer.close()
-#	print('Ports Closed')
-#
-#elif (a == "wait"):
-#	while 1:
-#		t = 0
-#		while t < 10:
-#			time.sleep(1)
-#			t = t + 1
-#		print("waiting")
