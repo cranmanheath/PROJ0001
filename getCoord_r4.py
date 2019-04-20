@@ -119,11 +119,30 @@ readoutSerial(1)
 #		print('marlin_data:' + ''.join(marlin_data))
 #		print('arduino_data:' + ''.join(arduino_data))
 
+def get_location(timeout=60):
+	""" 
+	Gets the location of the printer and waits if the printer is still
+	moving.
+	"""
+	start_time = time.time()
+	marlin_loc = writeCommand('M114\n', 1)
+	# Give the printer up to timeout to move to the next position.
+	while time.time() - start_time < timeout:
+		if 'busy' in marlin_loc[0]:
+			marlin_loc = writeCommand('M114\n', 1)
+		else:
+			break
+	return marlin_loc
+
 time.sleep(0.1)
 
+############################################
+#### SCAN THE GRID #########################
+############################################
+
 # Create meshgrid to scan
-x_array = np.arange(0, 100, 33)
-y_array = np.arange(0, 100, 33)
+x_array = np.arange(0, 100, 50)
+y_array = np.arange(0, 100, 50)
 XX, YY = np.meshgrid(x_array, y_array)
 
 # Create empty arrays to fill as the printer moves to each grid point.
@@ -134,36 +153,42 @@ led_values = np.nan*np.zeros_like(XX)
 # Park printer (Good place to start)
 writeCommand('G28\n', 1)
 print('Printer parked')
+writeCommand('G1 Z20\n', 1)
+get_location()
 
 for i_x in np.arange(XX.shape[0]):
 	for i_y in np.arange(YY.shape[1]):
 		# Move to positon X_i, Y_i.
 		writeCommand('G1 X%d Y%d\n' % (XX[i_x, i_y], YY[i_x, i_y]) , 1)
-		# Give the printer some time to move back in y.
-		if (i_y == 0) and (i_y > 0):
-			time.sleep(5) 
-		marlin_loc = writeCommand('M114\n', 1)
-		print(marlin_loc)
+		marlin_loc = get_location()
 		true_x[i_x, i_y] = marlin_loc[0].split(':')[1].split(' ')[0]
 		true_y[i_x, i_y] = marlin_loc[0].split(':')[2].split(' ')[0]
 		led_values[i_x, i_y] = int(writeCommand(2, 2)[0].rstrip())
-		
 
-#for i, x_i in enumerate(x_array):
-#	writeCommand('G1 X%d\n' % x_i , 1)
-#	marlin_loc = writeCommand('M114\n', 1)
-#	#print(x_i, marlin_loc)
-#	led_vals[i] = writeCommand(2, 2)[0].rstrip()
-#	true_x_array[i] = marlin_loc[0].split(':')[1].split(' ')[0]
+writeCommand('G28\n', 1)
+print('Printer parked')
 
-for i_x in np.arange(XX.shape[0]):
-	for i_y in np.arange(YY.shape[1]):
-		print(true_x[i_x, i_y], true_y[i_x, i_y], led_values[i_x, i_y])
+###################################################
+################# SAVE TO FILE ####################
+###################################################
+with open('led_values.csv', 'w') as f:
+	"""Save the data run to a csv file. """
+	w = csv.writer(f)
+	# Print header.
+	w.writerow(['x', 'y', 'led_value'])
 
-#for x_i, led_i in zip(true_x_array, led_vals):
-#	print(x_i, led_i)
+	for i_x in np.arange(XX.shape[0]):
+		for i_y in np.arange(YY.shape[1]):
+			w.writerow([true_x[i_x, i_y], true_y[i_x, i_y],
+				 led_values[i_x, i_y]])
 
-
+##################################################
+########### FIND X & Y AT MAX LED_VALUE ##########
+##################################################
+i_max = np.argmax(led_values) # Max on flattened array.
+print('Max value:', led_values.flatten()[i_max], 
+	'at X = ', true_x.flatten()[i_max], 
+	'Y = ', true_y.flatten()[i_max])
 
 ####################################
 ##collect data
