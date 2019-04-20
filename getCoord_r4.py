@@ -2,6 +2,7 @@ import serial
 import time
 import struct
 import csv
+import numpy as np
 
 
 ###################################
@@ -57,7 +58,8 @@ def writeCommand(command, device, timeout=20):
 	ser = selectSerial(device)
 	ser.write('%s' %command)
 	start_time = time.time()
-	time.sleep(.1)
+	if device == 2:
+		time.sleep(.1)
 	incoming_data = []
 
 	while time.time() - start_time < timeout:
@@ -107,18 +109,65 @@ def calibrate(fGcode):
 
 readoutSerial(1)
 
-while 1:
-	a = raw_input("give command or quit: ")
-	if a == "quit":
-		break
-	else:
-		marlin_data = writeCommand('%s\n' %a , 1)
-		arduino_data = writeCommand(2, 2)
-		print('marlin_data:' + ''.join(marlin_data))
-		print('arduino_data:' + ''.join(arduino_data))
+#while 1:
+#	a = raw_input("give command or quit: ")
+#	if a == "quit":
+#		break
+#	else:
+#		marlin_data = writeCommand('%s\n' %a , 1)
+#		arduino_data = writeCommand(2, 2)
+#		print('marlin_data:' + ''.join(marlin_data))
+#		print('arduino_data:' + ''.join(arduino_data))
+
+time.sleep(0.1)
+
+# Create meshgrid to scan
+x_array = np.arange(0, 100, 33)
+y_array = np.arange(0, 100, 33)
+XX, YY = np.meshgrid(x_array, y_array)
+
+# Create empty arrays to fill as the printer moves to each grid point.
+true_x = np.nan*np.zeros_like(XX)
+true_y = np.nan*np.zeros_like(YY)
+led_values = np.nan*np.zeros_like(XX)
+
+# Park printer (Good place to start)
+writeCommand('G28\n', 1)
+print('Printer parked')
+
+for i_x in np.arange(XX.shape[0]):
+	for i_y in np.arange(YY.shape[1]):
+		# Move to positon X_i, Y_i.
+		writeCommand('G1 X%d Y%d\n' % (XX[i_x, i_y], YY[i_x, i_y]) , 1)
+		# Give the printer some time to move back in y.
+		if (i_y == 0) and (i_y > 0):
+			time.sleep(5) 
+		marlin_loc = writeCommand('M114\n', 1)
+		print(marlin_loc)
+		true_x[i_x, i_y] = marlin_loc[0].split(':')[1].split(' ')[0]
+		true_y[i_x, i_y] = marlin_loc[0].split(':')[2].split(' ')[0]
+		led_values[i_x, i_y] = int(writeCommand(2, 2)[0].rstrip())
+		
+
+#for i, x_i in enumerate(x_array):
+#	writeCommand('G1 X%d\n' % x_i , 1)
+#	marlin_loc = writeCommand('M114\n', 1)
+#	#print(x_i, marlin_loc)
+#	led_vals[i] = writeCommand(2, 2)[0].rstrip()
+#	true_x_array[i] = marlin_loc[0].split(':')[1].split(' ')[0]
+
+for i_x in np.arange(XX.shape[0]):
+	for i_y in np.arange(YY.shape[1]):
+		print(true_x[i_x, i_y], true_y[i_x, i_y], led_values[i_x, i_y])
+
+#for x_i, led_i in zip(true_x_array, led_vals):
+#	print(x_i, led_i)
+
+
+
 ####################################
 ##collect data
 ####################################
-#marSer.close()
-#ardSer.close()
-#print('Ports Closed')
+marSer.close()
+ardSer.close()
+print('Ports Closed')
