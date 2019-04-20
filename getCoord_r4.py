@@ -1,6 +1,7 @@
 import serial
 import time
 import struct
+import csv
 
 
 ###################################
@@ -44,34 +45,52 @@ while 1:
 #functions
 ###################################
 def readoutSerial(device):
+	""" Clear the serial input buffer """
 	selectSerial(device).flushInput()
 
 
-def writeCommand(command, device):	
-	selectSerial(device).write('%s\n' %command)
+def writeCommand(command, device):
+	"""
+	This function writes a Marlin or Arduino command to the
+	serial port named device.  
+	"""	
+	ser = selectSerial(device)
+	ser.write('%s\n' %command)
 	time.sleep(.1)
-	selectSerial(device).flushOutput()
+	ser.flushOutput()
 	time.sleep(.1)
-	while 1:
-		line = selectSerial(device).readline()
-		time.sleep(.1)
-		print(line)
+	incoming_data = []
 
-		if device == 1:
-			if line == 'ok\n':
-				print('Marlin ok received')
-				break
-			if not line:
-				print('EOF Marlin reached')
-				break
-		if device == 2:
-			if line == 'ok\r\n':
-				print('arduino ok received')
-				break
-			if not line:
-				print('EOF arduino reached')
-				break				
-	return;
+	while 1:
+		while ser.inWaiting():
+			line = ser.readline()
+			#print(line)
+			incoming_data.append(line)
+
+			if (device == 1) and ('ok' in line):
+				print('ok received')
+				return incoming_data
+			elif (device == 2):
+				pass
+#		line = selectSerial(device).readline()
+#		time.sleep(.1)
+#		print(line)
+
+#		if device == 1:
+#			if line == 'ok\n':
+#				print('Marlin ok received')
+#				break
+#			if not line:
+#				print('EOF Marlin reached')
+#				break
+#		if device == 2:
+#			if line == 'ok\r\n':
+#				print('arduino ok received')
+#				break
+#			if not line:
+#				print('EOF arduino reached')
+#				break				
+	return incoming_data
 
 def selectSerial(devID):
 	switcher = {
@@ -109,11 +128,12 @@ def calibrate(fGcode):
 readoutSerial(1)
 
 while 1:
-	a = input("give command or quit: ")
+	a = raw_input("give command or quit: ")
 	if a == "quit":
 		break
 	else:
-		writeCommand('%s\n' %a , 1)
+		incomming_data = writeCommand('%s\n' %a , 1)
+		print(incomming_data)
 ###################################
 #collect data
 ###################################
