@@ -316,7 +316,7 @@
 #define TEMP_SENSOR_2 0
 #define TEMP_SENSOR_3 0
 #define TEMP_SENSOR_4 0
-#define TEMP_SENSOR_BED 0
+#define TEMP_SENSOR_BED 1
 #define TEMP_SENSOR_CHAMBER 0
 
 // Dummy thermistor constant temperature readings, for use with 998 and 999
@@ -880,8 +880,8 @@
 // @section machine
 
 // The size of the print bed
-#define X_BED_SIZE 100
-#define Y_BED_SIZE 100
+#define X_BED_SIZE 140
+#define Y_BED_SIZE 140
 
 // Travel limits (mm) after homing, corresponding to endstop positions.
 #define X_MIN_POS 0
@@ -895,7 +895,6 @@
  * Software Endstops
  *
  * - Prevent moves outside the set machine bounds.
- * - Individual axes can be disabled, if desired.
  * - X and Y only apply to Cartesian robots.
  * - Use 'M211' to set software endstops on/off or report current state
  */
